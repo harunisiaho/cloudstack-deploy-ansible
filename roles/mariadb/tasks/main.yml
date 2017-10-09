@@ -1,0 +1,93 @@
+- name: Installing mariadb
+  yum: 
+    name: "{{ item }}"  
+    state: latest
+    update_cache: no
+  with_items: 
+    - mariadb-server
+
+- name: Ensure service is started and that it always starts on boot 
+  service: 
+    name: mariadb 
+    state: started 
+    enabled: yes
+
+- name: Ensure Services are enabled at Boot
+  service: 
+    name: "{{ item }}"
+    enabled: yes
+    state: started      
+  with_items:  
+    - rpcbind
+    - nfs-server
+    - nfs-lock
+    - nfs-idmap
+
+## Update Mysql Root Password
+# Comment login_user and login_password when running for the first time
+- name: update mysql root password
+  mysql_user:
+    login_user: "{{ mysql_root_username }}"
+    login_password: "{{ mysql_root_password }}"
+    name: root
+    host: "{{ item  }}"
+    password: "{{ mysql_root_password  }}"
+    state: present
+  with_items: 
+    - localhost
+    - '127.0.0.1'
+    - "{{ cs_manager_01_ip }}"
+    - "{{ cs_manager_02_ip }}"
+
+- name: Add cloud user
+  mysql_user:
+    login_user: "{{ mysql_root_username }}"
+    login_password: "{{ mysql_root_password }}"
+    name: " {{ myql_cloud_user }} "
+    host: "{{ item.name  }}"
+    password: "{{ mysql_root_password  }}"
+    state: present
+  with_items: "{{ mysql_client_hosts }}"
+
+- name: Removing test database
+  mysql_db:
+    login_user: "{{ mysql_root_username    }}"
+    login_password: "{{ mysql_root_password    }}"
+    name: test
+    state: absent
+
+- name: Removing anonymous mysql users
+  mysql_user:
+    login_user: "{{ mysql_root_username    }}"
+    login_password: "{{ mysql_root_password    }}"
+    name: ""
+    host_all: yes
+    state: absent
+
+- name: Creating cloudstack mysql databases
+  mysql_db:
+    login_user: "{{ mysql_root_username   }}"
+    login_password: "{{ mysql_root_password   }}"
+    name: "{{ item.name  }}"
+    state: present
+  with_items: "{{ mysql_databases  }}"
+
+- name: create mysql users and assign privileges to db
+  mysql_user:
+    login_user: "{{ mysql_root_username }}"
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ item.name  }}"
+    host: "{{ item.host | default('localhost') }}"
+    password: "{{ item.password  }}"
+    priv: "{{ item.priv }}"
+    state:  "{{ item.state | default('present') }}"
+    append_privs: "{{ item.append_privs | default('no')   }}"
+  with_items: "{{ mysql_users  }}"
+
+- name: Allow Ports through the firewall
+  firewalld: 
+    zone: public 
+    port: "{{ item }}/tcp" 
+    permanent: true
+    state: enabled
+  with_items: " {{ mysql_ports }} "

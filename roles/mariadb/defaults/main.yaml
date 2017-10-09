@@ -1,0 +1,37 @@
+---
+mysql_ports:
+  - 3306
+
+mysql_root_username: "root"
+myql_cloud_user: "cloud"
+mysql_cloud_password: "P@s51234!"
+mysql_root_password: "P@s51234!"
+mysql_remote_password: "P@s51234!"
+
+
+cs_manager_01_ip: 172.28.20.72
+cs_manager_02_ip: 172.28.20.73
+cs_mariadb_01_ip: 172.28.20.74
+
+mysql_client_hosts:
+  - name: "{{ cs_manager_01_ip }}"
+  - name: "{{ cs_manager_02_ip }}"
+  - name: "{{ cs_mariadb_01_ip }}"
+
+mysql_databases:
+  - name: cloud
+  - name: cloud_usage
+
+mysql_users:
+  - name: " {{ mysql_root_username }} "
+    host: "%"
+    password: "{{ mysql_root_password   }}"
+    priv: "cloud.*:all/cloud_usage.*:all"
+    
+  - name: "{{ myql_cloud_user }}"
+    host: "%"
+    password: "{{ mysql_cloud_password }}"
+    priv: "cloud.*:all/cloud_usage.*:all"
+
+
+  

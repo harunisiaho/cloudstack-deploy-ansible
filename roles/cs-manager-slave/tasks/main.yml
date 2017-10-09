@@ -1,0 +1,40 @@
+---
+- name: Uploading Apache Cloudstack Repo file to /etc/yum.repos.d/cloudstack.repo
+  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
+
+- name: Installing CloudStack packages
+  yum: name=cloudstack-management  state=present  update_cache=yes  
+
+- name: Allow Ports through the firewall
+  firewalld: 
+    zone: public 
+    port: "{{ item }}/tcp" 
+    permanent: true
+    state: enabled
+  with_items: "{{ cs_ports }}"
+
+- name: Downloading vdhutil Package
+  get_url: url=http://download.cloud.com.s3.amazonaws.com/tools/vhd-util dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
+
+- name: cloudstack-setup-databases
+  command: /usr/bin/cloudstack-setup-databases cloud:'P@s51234!'@{{ cs_mariadb_01_ip }}
+
+- name: Ensure secondary storage mount exists
+  file: path={{tmp_nfs_path}} state=directory
+  
+- name: Ensure  NFS storage is mounted
+  mount: fstype=nfs  name={{tmp_nfs_path}}  opts=nolock src={{sec_nfs_ip}}:{{sec_nfs_path}}  state=mounted  
+  
+- name: Seed secondary storage
+  command: /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m {{ tmp_nfs_path }} -u http://197.232.56.250/systemvm64template-4.10-4.10.0.0-xen.vhd.bz2 -h xenserver -F
+
+- name: CloudStack Setup Management
+  command: cloudstack-setup-management --tomcat7
+
+- name: Enable and start cloudstack Service
+  sudo: yes
+  service: 
+    enabled: yes  
+    name: cloudstack-management 
+    state: started
+  

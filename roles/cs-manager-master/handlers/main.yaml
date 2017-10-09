@@ -1,0 +1,4 @@
+---
+# handlers file
+# - name: restart cloudstack
+#   service: name=cloudstack-management state=restarted

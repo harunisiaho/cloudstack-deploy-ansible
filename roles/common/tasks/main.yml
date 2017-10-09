@@ -1,0 +1,19 @@
+- name: Update System Packages
+  yum: name=*  state=latest  update_cache=yes
+
+- name: Installing Common Packages
+  yum: 
+    name: "{{ item }}"  
+    state: latest
+    update_cache: yes
+  with_items: 
+    - mariadb
+    - MySQL-python
+    - libselinux-python
+    - nfs-utils
+    
+- name: Setting SELINUX to permissive
+  selinux:
+    conf: '/etc/selinux/config' 
+    policy: 'targeted' 
+    state: 'permissive'

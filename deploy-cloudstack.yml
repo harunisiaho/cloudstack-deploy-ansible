@@ -1,0 +1,37 @@
+---
+- hosts: all
+  
+  roles:
+    - common
+
+- hosts: mysql
+
+  roles:
+    - mariadb
+
+- hosts: [cs-manager-master]
+  vars:
+    tmp_nfs_path: /mnt/secondary
+    sec_nfs_ip: 172.28.20.62
+    sec_nfs_path: /storage/cloud-test/secondary
+
+  roles:    
+    - cs-manager-master
+
+# - hosts: [cs-manager-slave]
+
+#   vars:
+#     mysql_root_password: P@s51234!
+#     mysql_cloud_password: P@s51234!
+#     ansible_hostname: cs-manager
+#     tmp_nfs_path: /mnt/secondary
+#     sec_nfs_ip: 172.28.20.62
+#     sec_nfs_path: /storage/cloud-test/secondary
+
+#   roles:    
+#     - cs-manager-slave
+
+
+  # tasks:
+  #   - include: /Users/harun/Projects/git/ansible/cloudstack/roles/cloudstack-management/tasks/setupdb.yml
+  #   - include: /Users/harun/Projects/git/ansible/cloudstack/roles/cloudstack-management/tasks/seedstorage.yml

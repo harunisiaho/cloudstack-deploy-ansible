@@ -1,0 +1,11 @@
+[cs-manager-master]
+cs-manager-01
+
+[cs-manager-slave]
+cs-manager-02
+
+[mysql]
+cs-mariadb-01
+
+[compute]
+cs-compute-01
